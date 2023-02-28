@@ -13,8 +13,8 @@ use Magento\Newsletter\Model\Subscriber;
 
 class SubscriberSaveAfter implements ObserverInterface
 {
-    private Data $helper;
-    private CustomerRepositoryFactory $customerRepositoryFactory;
+    private $helper;
+    private $customerRepositoryFactory;
 
     /**
      * @param Data $helper
