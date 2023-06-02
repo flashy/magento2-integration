@@ -12,6 +12,7 @@ use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductColl
 use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\Checkout\Model\Cart;
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Customer\Model\ResourceModel\Customer\CollectionFactory as CustomerCollectionFactory;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -22,22 +23,24 @@ use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Framework\Data\Form\FormKey;
 use Magento\Framework\DataObject;
+use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Registry;
 use Magento\Framework\Stdlib\Cookie\CookieMetadataFactory;
 use Magento\Framework\Stdlib\CookieManagerInterface;
 use Magento\Newsletter\Model\ResourceModel\Subscriber\CollectionFactory as SubscriberCollectionFactory;
+use Magento\Newsletter\Model\Subscriber;
+use Magento\Newsletter\Model\SubscriberFactory;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
 use Magento\SalesRule\Model\Coupon;
-use Magento\Store\Model\ScopeInterface;
-use Magento\Store\Model\StoreManagerInterface;
-use Magento\Sales\Model\Order;
-use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\SalesRule\Model\Rule\Condition\Combine;
 use Magento\SalesRule\Model\Rule\Condition\Product;
 use Magento\SalesRule\Model\Rule\Condition\Product\Found;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\StoreManagerInterface;
 
 class Data extends \Magento\Framework\App\Helper\AbstractHelper
 {
@@ -195,6 +198,16 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     private $eventManager;
 
     /**
+     * @var CustomerRepositoryInterface
+     */
+    private $customerRepository;
+
+    /**
+     * @var SubscriberFactory
+     */
+    private $subscriberFactory;
+
+    /**
      * Data constructor.
      *
      * @param Context $context
@@ -220,6 +233,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param Coupon $coupon
      * @param DirectoryList $directorylist
      * @param StockRegistryInterface $stockRegistry
+     * @param EventManager $eventManager
+     * @param SubscriberFactory $subscriberFactory
+     * @param CustomerRepositoryInterface $customerRepository
      */
     public function __construct(
         Context                     $context,
@@ -245,7 +261,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         Coupon                      $coupon,
         DirectoryList               $directorylist,
         StockRegistryInterface      $stockRegistry,
-        EventManager $eventManager
+        EventManager                $eventManager,
+        SubscriberFactory           $subscriberFactory,
+        CustomerRepositoryInterface $customerRepository
     )
     {
         $objectManager = ObjectManager::getInstance();
@@ -279,6 +297,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->_directorylist = $directorylist;
         $this->_stockRegistry = $stockRegistry;
         $this->eventManager = $eventManager;
+        $this->subscriberFactory = $subscriberFactory;
+        $this->customerRepository = $customerRepository;
         parent::__construct($context);
 
         $this->flashy = null;
@@ -2015,5 +2035,23 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         echo '<pre>';
         var_dump($content);
         die;
+    }
+
+    public function unsubscribeContactByEmail($email, $storeId)
+    {
+        try {
+            $customer = $this->customerRepository->get($email);
+            $websiteId = $this->_storeManager->getStore($storeId)->getWebsiteId();
+            /** @var Subscriber $subscriber */
+            $subscriber = $this->subscriberFactory->create()->loadByCustomer((int)$customer->getId(), $websiteId);
+            if ($subscriber->getStatus() != Subscriber::STATUS_SUBSCRIBED) {
+                return false;
+            }
+            $subscriber->unsubscribe();
+        } catch (NoSuchEntityException $e) {
+            return false;
+        }
+
+        return true;
     }
 }
