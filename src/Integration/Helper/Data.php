@@ -1074,8 +1074,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             if ($this->getFlashyActive() && isset($this->flashy)) {
 
                 $account_id = $this->getFlashyId();
+                $paymentAdditionalInformation = $order->getAdditionalInformation();
 
-                if ($order->getStatus() != $order->getOrigData('status')) {
+                if ($order->getStatus() != $order->getOrigData('status')
+                    && isset($paymentAdditionalInformation['flashy_purchase_fired'])
+                ) {
 
                     $email = $order->getCustomerEmail();
 
@@ -1671,7 +1674,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $cartHash->load($key, 'key');
 
             //get quote from cart
-            $quote = $cart->getQuote();
+            $quote = ($cart instanceof Cart) ? $cart->getQuote() : $cart;
 
             //get all visible items of the cart
             $items = $quote->getAllVisibleItems();
@@ -1718,7 +1721,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function updateFlashyCache($cart)
     {
-        $cart = $this->setFlashyCartCache($cart->getQuote());
+        $quote = ($cart instanceof Cart) ? $cart->getQuote() : $cart;
+        $cart = $this->setFlashyCartCache($quote);
     }
 
     /**
@@ -2042,8 +2046,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         try {
             $customer = $this->customerRepository->get($email);
             $websiteId = $this->_storeManager->getStore($storeId)->getWebsiteId();
-            /** @var Subscriber $subscriber */
             $subscriber = $this->subscriberFactory->create()->loadByCustomer((int)$customer->getId(), $websiteId);
+
             if ($subscriber->getStatus() != Subscriber::STATUS_SUBSCRIBED) {
                 return false;
             }

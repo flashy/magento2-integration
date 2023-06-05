@@ -5,6 +5,7 @@ namespace Flashy\Integration\Observer\Sales;
 use Flashy\Integration\Helper\Data;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Quote\Api\CartRepositoryInterface;
 
 class OrderPlaceAfter implements ObserverInterface
 {
@@ -14,12 +15,21 @@ class OrderPlaceAfter implements ObserverInterface
     public $helper;
 
     /**
+     * @var CartRepositoryInterface
+     */
+    private $cartRepository;
+
+    /**
      * OrderPlaceAfter constructor.
      *
+     * @param CartRepositoryInterface $cartRepository
      * @param Data $helper
      */
-    public function __construct(Data $helper)
-    {
+    public function __construct(
+        CartRepositoryInterface $cartRepository,
+        Data $helper
+    ) {
+        $this->cartRepository = $cartRepository;
         $this->helper = $helper;
     }
 
@@ -31,6 +41,7 @@ class OrderPlaceAfter implements ObserverInterface
     public function execute(Observer $observer)
     {
         $order = $observer->getEvent()->getOrder();
-        $this->helper->orderPlace($order);
+        $quote = $this->cartRepository->get($order->getQuoteId());
+        $this->helper->updateFlashyCartHash($quote);
     }
 }
