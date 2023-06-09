@@ -1074,7 +1074,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             if ($this->getFlashyActive() && isset($this->flashy)) {
 
                 $account_id = $this->getFlashyId();
-                $paymentAdditionalInformation = $order->getAdditionalInformation();
+                $paymentAdditionalInformation = $order->getPayment()->getAdditionalInformation();
 
                 if ($order->getStatus() != $order->getOrigData('status')
                     && isset($paymentAdditionalInformation['flashy_purchase_fired'])
