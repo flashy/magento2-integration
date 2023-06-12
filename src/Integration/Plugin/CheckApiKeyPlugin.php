@@ -30,7 +30,11 @@ class CheckApiKeyPlugin
         $apiKeyValue = $this->config->getValue(self::FLASHY_IP_KEY_CONFIG_PATH);
         $flashyList = $this->config->getValue(self::FLASHY_LIST_CONFIG_PATH);
 
-        if (!empty($apiKeyValue) && empty($flashyList)) {
+        if (
+            !empty($apiKeyValue)
+            && empty($flashyList)
+            && !empty($subject->getForm()->getElement(self::FLASHY_LIST_FORM_ELEMENT_ID)))
+        {
             $subject->getForm()->getElement(self::FLASHY_LIST_FORM_ELEMENT_ID)->setRequired(true);
         }
 

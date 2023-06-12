@@ -1782,6 +1782,38 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         return $messages;
     }
 
+    /**
+     * Tracks the event UpdateCart
+     *
+     * @param Order $order
+     *
+     * @return void
+     */
+    public function trackEventUpdateCart(Order $order)
+    {
+        $this->addLog('salesOrderPlaceAfter');
+
+        if ($this->getFlashyActive() && isset($this->apiKey) && $this->getFlashyPurchase()) {
+            $total = (float)$order->getSubtotal();
+            $items = $order->getAllItems();
+            $productIds = [];
+
+            foreach ($items as $item) {
+                $productIds[] = $item->getProductId();
+            }
+            $data = [
+                'email' => $order->getCustomerEmail(),
+                'content_ids' => $productIds,
+                'value' => $total,
+                'currency' => $order->getOrderCurrencyCode()
+            ];
+            $this->addLog('Data=' . json_encode($data));
+            $track = Helper::tryOrLog(function () use ($data) {
+                return $this->flashy->events->track("UpdateCart", $data);
+            });
+            $this->addLog('UpdateCart sent: ' . json_encode($track));
+        }
+    }
     public function createJsonEncoded()
     {
         $default = array(

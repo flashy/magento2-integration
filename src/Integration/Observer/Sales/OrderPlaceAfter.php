@@ -43,5 +43,6 @@ class OrderPlaceAfter implements ObserverInterface
         $order = $observer->getEvent()->getOrder();
         $quote = $this->cartRepository->get($order->getQuoteId());
         $this->helper->updateFlashyCartHash($quote);
+        $this->helper->trackEventUpdateCart($order);
     }
 }
