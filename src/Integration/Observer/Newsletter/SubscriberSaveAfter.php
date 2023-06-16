@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Flashy\Integration\Observer\Newsletter;
 
 use Flashy\Integration\Helper\Data;
+use Flashy\Integration\Service\IsOrderPlaceService;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Customer\Api\Data\AddressInterface;
 use Magento\Customer\Model\ResourceModel\CustomerRepositoryFactory;
@@ -26,6 +27,11 @@ class SubscriberSaveAfter implements ObserverInterface
     private $helper;
 
     /**
+     * @var IsOrderPlaceService
+     */
+    private $isOrderPlaceService;
+
+    /**
      * @var OrderRepositoryInterfaceFactory
      */
     private $orderRepositoryFactory;
@@ -38,17 +44,20 @@ class SubscriberSaveAfter implements ObserverInterface
     /**
      * @param Data $helper
      * @param CustomerRepositoryFactory $customerRepositoryFactory
+     * @param IsOrderPlaceService $isOrderPlaceService
      * @param OrderRepositoryInterfaceFactory $orderRepositoryFactory
      * @param SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory
      */
     public function __construct(
         Data $helper,
         CustomerRepositoryFactory $customerRepositoryFactory,
+        IsOrderPlaceService $isOrderPlaceService,
         OrderRepositoryInterfaceFactory $orderRepositoryFactory,
         SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory
     ) {
         $this->helper = $helper;
         $this->customerRepositoryFactory = $customerRepositoryFactory;
+        $this->isOrderPlaceService = $isOrderPlaceService;
         $this->orderRepositoryFactory = $orderRepositoryFactory;
         $this->searchCriteriaBuilderFactory = $searchCriteriaBuilderFactory;
     }
@@ -118,7 +127,10 @@ class SubscriberSaveAfter implements ObserverInterface
         } catch (\Exception $e) {
             // TODO: implement logic to handle Exceptions
         }
-
         $this->helper->subscriberSend($subscriberData, $subscriber->getStoreId());
+
+        if ($this->isOrderPlaceService->getIsOrderPlaced()) {
+            $this->helper->trackEventUpdateCart($order);
+        }
     }
 }

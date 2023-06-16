@@ -3,6 +3,7 @@
 namespace Flashy\Integration\Observer\Sales;
 
 use Flashy\Integration\Helper\Data;
+use Flashy\Integration\Service\IsOrderPlaceService;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -10,27 +11,35 @@ use Magento\Quote\Api\CartRepositoryInterface;
 class OrderPlaceAfter implements ObserverInterface
 {
     /**
-     * @var Data
-     */
-    public $helper;
-
-    /**
      * @var CartRepositoryInterface
      */
     private $cartRepository;
+
+    /**
+     * @var IsOrderPlaceService
+     */
+    private $isOrderPlaceService;
+
+    /**
+     * @var Data
+     */
+    public $helper;
 
     /**
      * OrderPlaceAfter constructor.
      *
      * @param CartRepositoryInterface $cartRepository
      * @param Data $helper
+     * @param IsOrderPlaceService $isOrderPlaceService
      */
     public function __construct(
         CartRepositoryInterface $cartRepository,
-        Data $helper
+        Data $helper,
+        IsOrderPlaceService $isOrderPlaceService
     ) {
         $this->cartRepository = $cartRepository;
         $this->helper = $helper;
+        $this->isOrderPlaceService = $isOrderPlaceService;
     }
 
     /**
@@ -43,6 +52,6 @@ class OrderPlaceAfter implements ObserverInterface
         $order = $observer->getEvent()->getOrder();
         $quote = $this->cartRepository->get($order->getQuoteId());
         $this->helper->updateFlashyCartHash($quote);
-        $this->helper->trackEventUpdateCart($order);
+        $this->isOrderPlaceService->setIsOrderPlaced(true);
     }
 }
