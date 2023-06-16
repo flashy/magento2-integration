@@ -42,6 +42,10 @@ class FlashyList implements ArrayInterface
      */
     public function toOptionArray()
     {
-        return $this->helper->getFlashyListOptions();
+        $options = [];
+        $options[] = ['value' => '', 'label' => '-- Please Select --'];
+        $flashyOptions = $this->helper->getFlashyListOptions();
+
+        return $flashyOptions ? array_merge($options, $flashyOptions) : [];
     }
 }
