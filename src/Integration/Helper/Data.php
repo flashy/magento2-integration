@@ -1177,6 +1177,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
 				$export_products[$i]['parent_id'] = (empty($is_parent[0]) ? 0 : $is_parent[0]);
 
+                $export_products[$i]['sku'] = $_product->getSku();
+
 				$export_products[$i]['created_at'] = date("Y-m-d", strtotime($_product->getCreatedAt()));
 
                 $export_products[$i]['updated_at'] = date("Y-m-d", strtotime($_product->getUpdatedAt()));
