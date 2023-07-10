@@ -1808,6 +1808,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'start' => date('Y-m-d'),   //Date
                 'isActive' => 1,
                 'includeShipping' => true,
+                'stop_rules' => false,
             );
 
             $merged = array_merge($default, $args);
@@ -1853,54 +1854,69 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     ->setProductIds($merged['product_ids'])
                     ->setCouponType(2)
                     ->setIsRss(0)
-                    ->setCouponCode($merged['coupon_code']);
+                    ->setCouponCode($merged['coupon_code'])
+                    ->setStopRulesProcessing($merged['stop_rules']);
 
-                    if( $args['minimum_amount'] > 0 )
+                        if( $args['minimum_amount'] > 0 )
+                        {
+                            $actions = $this->_objectManager->create('Magento\SalesRule\Model\Rule\Condition\Combine')
+                                ->setType('Magento\SalesRule\Model\Rule\Condition\Address')
+                                ->setAttribute('base_subtotal_with_discount')
+                                ->setOperator('>')
+                                ->setValue($args['minimum_amount']);
+
+                            $shoppingCartPriceRule->getActions()->addCondition($actions);
+                        }
+
+                    if( $args['free_shipping'] )
                     {
-                        $actions = $this->_objectManager->create('Magento\SalesRule\Model\Rule\Condition\Combine')
-                            ->setType('Magento\SalesRule\Model\Rule\Condition\Address')
-                            ->setAttribute('base_subtotal_with_discount')
-                            ->setOperator('>')
-                            ->setValue($args['minimum_amount']);
-
-                        $shoppingCartPriceRule->getActions()->addCondition($actions);
+                        $shoppingCartPriceRule->setSimpleFreeShipping(1);
                     }
 
-                if( $args['free_shipping'] )
-                {
-                    $shoppingCartPriceRule->setSimpleFreeShipping(1);
-                }
+                    $categoryInclude = true;
 
-                if( isset($args['category']) )
-                {
-                    $shoppingCartPriceRule->getConditions()->loadArray(
-                        [
-                            'type' => Combine::class,
-                            'attribute' => null,
-                            'operator' => null,
-                            'value' => '1',
-                            'is_value_processed' => null,
-                            'aggregator' => 'all',
-                            'conditions' => [
-                                    [
-                                        'type' => Found::class,
-                                        'attribute' => null,
-                                        'operator' => null,
-                                        'value' => 1,
-                                        'is_value_processed' => null,
-                                    ],
-                                    [
-                                        'type' => Product::class,
-                                        'attribute' => 'category_ids',
-                                        'operator' => '==',
-                                        'value' => $merged['category'],
-                                        'is_value_processed' => false,
-                                        'attribute_scope' => ''
-                                    ]
-                            ],
-                        ]
-                    );
-                }
+                    if( isset($args['category_in']) )
+                    {
+                        if( $args['category_in'] == true )
+                        {
+                            $categoryInclude = true;
+                        }
+                        else if( $args['category_in'] == false )
+                        {
+                            $categoryInclude = false;
+                        }
+                    }
+
+                    if( isset($args['category']) )
+                    {
+                        $shoppingCartPriceRule->getConditions()->loadArray(
+                            [
+                                'type' => Combine::class,
+                                'attribute' => null,
+                                'operator' => null,
+                                'value' => '1',
+                                'is_value_processed' => null,
+                                'aggregator' => 'all',
+                                'conditions' => [
+                                        [
+                                            'type' => Found::class,
+                                            'attribute' => null,
+                                            'operator' => null,
+                                            'value' => 1,
+                                            'is_value_processed' => null,
+                                        ],
+                                        [
+                                            'type' => Product::class,
+                                            'attribute' => 'category_ids',
+                                            'operator' => $categoryInclude ? '()' : '!()',
+                                            'value' => $merged['category'],
+                                            'is_value_processed' => false,
+                                            'attribute_scope' => ''
+                                        ]
+                                ],
+                            ]
+                        );
+                    }
 
                 $shoppingCartPriceRule->save();
 

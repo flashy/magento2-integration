@@ -16,7 +16,7 @@
 						"email": "<?php echo base64_encode($block->getCustomerEmail()); ?>"
 					});
 
-			<?php }   ?>
+			<?php } ?>
 			//]]>
 			</script>
 			<?php
@@ -57,6 +57,14 @@
                     //]]>
                 </script>
 		<?php } ?>
+
+        <?php if( $block->isCategoryPage() ){ ?>
+            <script type="text/javascript">
+		    //<![CDATA[
+			flashy('amplify:ViewCategory', {"category": "<?php echo $block->getCategoryName(); ?>"});
+			//]]>
+			</script>
+        <?php } ?>
 
 	<script type="text/javascript">
 		//<![CDATA[
