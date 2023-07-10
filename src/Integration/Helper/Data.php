@@ -835,7 +835,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         try {
             return new Flashy(array(
                 'api_key' => $flashy_key,
-                'log_path' => $this->_directorylist->getPath('var') . '\log\flashy.log'
+                'log_path' => $this->_directorylist->getPath('var') . '/log/flashy.log'
             ));
         } catch (\Exception $e) {
             $this->addLog($e->getMessage());
@@ -1954,7 +1954,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $this->addLog("Log exported.");
 
             if ($this->getFlashyLog()) {
-                $fileContent = explode("\n", file_get_contents($this->_directorylist->getPath('var') . '\log\flashy.log'));
+                $fileContent = explode("\n", file_get_contents($this->_directorylist->getPath('var') . '/log/flashy.log'));
             }
 
             return array(
@@ -1999,7 +1999,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     public function clearLogs()
     {
-        unlink($this->_directorylist->getPath('var') . '\log\flashy.log');
+        unlink($this->_directorylist->getPath('var') . '/log/flashy.log');
         $this->addLog('Logs deleted.');
     }
 
