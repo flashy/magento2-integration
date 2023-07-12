@@ -97,4 +97,14 @@ class Tracking extends Template
     {
         return $this->helper->getCustomerEmail();
     }
+
+    public function isCategoryPage()
+    {
+        return $this->helper->isCategoryPage();
+    }
+
+    public function getCategoryName()
+    {
+        return $this->helper->getCategoryName();
+    }
 }
