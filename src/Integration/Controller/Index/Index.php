@@ -68,6 +68,14 @@ class Index extends Action
                 case 'contacts':
                     $resultArray = $this->helper->exportContacts($store_id, $limit, $page);
                     break;
+                case 'contactUnsubscribe':
+                    $unsubscriberEmail = $this->getRequest()->getParam('email');
+                    $subscription = $this->helper->unsubscribeContactByEmail(
+                        $unsubscriberEmail,
+                        $store_id != 0 ? $store_id : 1
+                    );
+                    $resultArray = array('success' => $subscription);
+                    break;
                 case 'orders':
                     $resultArray = $this->helper->exportOrders($store_id, $limit, $page);
                     break;
