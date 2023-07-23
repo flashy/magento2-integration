@@ -432,10 +432,17 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getFlashyKey()
     {
-        $store = $this->_request->getParam("website", 0);
+        $store = $this->_request->getParam("store", 0);
 
         if ($store <= 0) {
-            $store = $this->_request->getParam("store", 0);
+            $store = $this->_request->getParam("store_id", 0);
+        }
+
+        if ($store <= 0)
+		{
+			$currentStore = $this->_storeManager->getStore();
+
+            $store = $currentStore->getId();
         }
 
         return $this->_scopeConfig->getValue(self::FLASHY_KEY_STRING_PATH, ScopeInterface::SCOPE_STORE, $store);
@@ -902,7 +909,25 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getFlashyIdCookie()
     {
-        return $this->_cookieManager->getCookie('flashy_id');
+        $key = $this->_request->getParam('flsid', 0);
+
+        if( empty($key) )
+            $key = $this->_cookieManager->getCookie('fls_id');
+
+        if( empty($key) )
+            $key = $this->_request->getParam('flashy', 0);
+
+        if( empty($key) )
+            $key = $this->_cookieManager->getCookie('flashy_id');
+
+        if( empty($key) )
+        {
+            $key = $this->_request->getParam('email', 0);
+
+            $key = base64_encode(urldecode($key));
+        }
+
+        return !empty($key) ? $key : false;
     }
 
     /**
@@ -991,6 +1016,44 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $this->showMessage($e->getMessage());
         }
         return $options;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCategoryPage()
+    {
+        $fullActionName = $this->_request->getFullActionName();
+
+        $controllerName = $this->_request->getControllerName();
+
+        $moduleName = $this->_request->getModuleName();
+
+        if ($fullActionName === 'catalog_category_view'
+            && $controllerName === 'category'
+            && $moduleName === 'catalog'
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     *get the category name
+     */
+	public function getCategoryName()
+    {
+        if( $this->isCategoryPage() )
+		{
+			$_objectManager = ObjectManager::getInstance();
+
+			$category = $_objectManager->get('Magento\Framework\Registry')->registry('current_category');
+
+            return $category->getName();
+        }
+
+        return null;
     }
 
     /**
@@ -1199,6 +1262,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 				$export_products[$i]['variant'] = (empty($is_parent[0]) ? 0 : 1);
 
 				$export_products[$i]['parent_id'] = (empty($is_parent[0]) ? 0 : $is_parent[0]);
+
+                $export_products[$i]['sku'] = $_product->getSku();
 
 				$export_products[$i]['created_at'] = date("Y-m-d", strtotime($_product->getCreatedAt()));
 
@@ -1865,6 +1930,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'isActive' => 1,
                 'includeShipping' => true,
                 'stop_rules' => false,
+                'website' => '1',
             );
 
             $merged = array_merge($default, $args);
@@ -1900,7 +1966,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     ->setToDate($merged['expiry_date'])
                     ->setUsesPerCustomer($merged['usage_limit_per_user'])
                     ->setCustomerGroupIds(array('0','1','2','3',))
-                    ->setWebsiteIds(array('1',))
+                    ->setWebsiteIds([$merged['website']])
                     ->setIsActive($merged['isActive'])
                     ->setSimpleAction($merged['discount_type'])
                     ->setDiscountAmount($merged['amount'])
@@ -1929,21 +1995,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                         $shoppingCartPriceRule->setSimpleFreeShipping(1);
                     }
 
-                    $categoryInclude = true;
-
-                    if( isset($args['category_in']) )
-                    {
-                        if( $args['category_in'] == true )
-                        {
-                            $categoryInclude = true;
-                        }
-                        else if( $args['category_in'] == false )
-                        {
-                            $categoryInclude = false;
-                        }
-                    }
-
-                    if( isset($args['category']) )
+                    if( isset($args['allow_categories']) )
                     {
                         $shoppingCartPriceRule->getConditions()->loadArray(
                             [
@@ -1964,8 +2016,39 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                                         [
                                             'type' => Product::class,
                                             'attribute' => 'category_ids',
-                                            'operator' => $categoryInclude ? '()' : '!()',
-                                            'value' => $merged['category'],
+                                            'operator' => '()',
+                                            'value' => $args['allow_categories'],
+                                            'is_value_processed' => false,
+                                            'attribute_scope' => ''
+                                        ]
+                                ],
+                            ]
+                        );
+                    }
+
+                    if( isset($args['exclude_categories']) )
+                    {
+                        $shoppingCartPriceRule->getConditions()->loadArray(
+                            [
+                                'type' => Combine::class,
+                                'attribute' => null,
+                                'operator' => null,
+                                'value' => '1',
+                                'is_value_processed' => null,
+                                'aggregator' => 'all',
+                                'conditions' => [
+                                        [
+                                            'type' => Found::class,
+                                            'attribute' => null,
+                                            'operator' => null,
+                                            'value' => 1,
+                                            'is_value_processed' => null,
+                                        ],
+                                        [
+                                            'type' => Product::class,
+                                            'attribute' => 'category_ids',
+                                            'operator' => '!()',
+                                            'value' => $args['exclude_categories'],
                                             'is_value_processed' => false,
                                             'attribute_scope' => ''
                                         ]
