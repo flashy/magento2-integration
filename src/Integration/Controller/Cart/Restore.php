@@ -65,20 +65,20 @@ if ($v[1] > 2) {
          */
         public function execute()
         {
-			$key = $this->getRequest()->getParam('flsid', 0);
+			$key = $this->getRequest()->getParam('flsid', false);
 
             if( empty($key) )
 				$key = $this->_cookieManager->getCookie('fls_id');
 
 			if( empty($key) )
-				$key = $this->getRequest()->getParam('flashy', 0);
+				$key = $this->getRequest()->getParam('flashy', false);
 
 			if( empty($key) )
 				$key = $this->_cookieManager->getCookie('flashy_id');
 
 			if( empty($key) )
 			{
-				$key = $this->getRequest()->getParam('email', 0);
+				$key = $this->getRequest()->getParam('email', false);
 
 				$key = base64_encode(urldecode($key));
 			}
@@ -126,7 +126,7 @@ if ($v[1] > 2) {
          */
         public function execute()
         {
-            $key = $this->getRequest()->getParam('flsid', 0);
+            $key = $this->getRequest()->getParam('flsid', false);
 
             if( empty($key) )
 				$key = $this->_cookieManager->getCookie('fls_id');
@@ -135,14 +135,14 @@ if ($v[1] > 2) {
 				$key = $this->_cookieManager->getCookie('flashy_id');
 
 			if( empty($key) )
-				$key = $this->getRequest()->getParam('flashy', 0);
+				$key = $this->getRequest()->getParam('flashy', false);
 
 			if( empty($key) )
 				$key = $this->_cookieManager->getCookie('flashy_id');
 
 			if( empty($key) )
 			{
-				$key = $this->getRequest()->getParam('email', 0);
+				$key = $this->getRequest()->getParam('email', false);
 
 				$key = base64_encode(urldecode($key));
 			}

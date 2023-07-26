@@ -432,13 +432,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getFlashyKey()
     {
-        $store = $this->_request->getParam("store", 0);
+        $store = $this->_request->getParam("store", false);
 
-        if ($store <= 0) {
-            $store = $this->_request->getParam("store_id", 0);
+		if( empty($store) )
+		{
+            $store = $this->_request->getParam("store_id", false);
         }
 
-        if ($store <= 0)
+		if( empty($store) )
 		{
 			$currentStore = $this->_storeManager->getStore();
 
@@ -799,7 +800,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
         $product = $objectManager->create('Magento\Catalog\Model\Product')->load($prdId);
 
-	$cats = $product->getCategoryIds();
+	    $cats = $product->getCategoryIds();
 
         $catsName = "";
 
@@ -909,20 +910,20 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getFlashyIdCookie()
     {
-        $key = $this->_request->getParam('flsid', 0);
+        $key = $this->_request->getParam('flsid', false);
 
         if( empty($key) )
             $key = $this->_cookieManager->getCookie('fls_id');
 
         if( empty($key) )
-            $key = $this->_request->getParam('flashy', 0);
+            $key = $this->_request->getParam('flashy', false);
 
         if( empty($key) )
             $key = $this->_cookieManager->getCookie('flashy_id');
 
         if( empty($key) )
         {
-            $key = $this->_request->getParam('email', 0);
+            $key = $this->_request->getParam('email', false);
 
             $key = base64_encode(urldecode($key));
         }
@@ -1046,9 +1047,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         if( $this->isCategoryPage() )
 		{
-			$_objectManager = ObjectManager::getInstance();
-
-			$category = $_objectManager->get('Magento\Framework\Registry')->registry('current_category');
+			$category = $this->_registry->registry('current_category');
 
             return $category->getName();
         }
