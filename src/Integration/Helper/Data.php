@@ -1196,7 +1196,26 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
 				$is_parent = $_objectManager->get('Magento\ConfigurableProduct\Model\Product\Type\Configurable')->getParentIdsByChild($product_id);
 
-				$export_products[$i]['variant'] = (empty($is_parent[0]) ? 0 : 1);
+                $children = $_objectManager->get('Magento\ConfigurableProduct\Model\Product\Type\Configurable')->getChildrenIds($product_id);
+
+				if( !empty($children) )
+				{
+					$variants = $this->getProductVariantsJson(array_keys($children[0]), ["id", "title"]);
+
+					$extra_images = $this->getProductImagesToSrc($children[0]);
+
+					if( !empty($variants) )
+					{
+						$export_products[$i]['variants'] = $variants;
+					}
+
+					if( !empty($extra_images) )
+					{
+						$export_products[$i]['extra_images'] = $extra_images;
+					}
+				}
+
+                $export_products[$i]['variant'] = (empty($is_parent[0]) ? 0 : 1);
 
 				$export_products[$i]['parent_id'] = (empty($is_parent[0]) ? 0 : $is_parent[0]);
 
@@ -1241,6 +1260,59 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             "next_page" => $next_url,
             "success" => true
         );
+    }
+
+    /**
+     * @param $product
+     * @param $array
+     * @return false|string
+     */
+    public function getProductVariantsJson($product, $array)
+    {
+        $data = [];
+
+        foreach( $product as $child )
+        {
+            $child_product = $this->_productFactory->create()->load($child);
+
+            $tmp = [];
+
+            if( in_array("id", $array) )
+					$tmp["id"] = $child;
+
+            if( in_array("title", $array) )
+                $tmp["title"] = $child_product->getName();
+
+            $data[] = $tmp;
+        }
+
+        return json_encode($data);
+    }
+
+
+    /**
+     * @param $product
+     * @return array
+     */
+	public function getProductImagesToSrc($product)
+    {
+		$store = $this->_storeManager->getStore();
+
+		$data = [];
+
+		foreach( $product as $child )
+        {
+            $child_product = $this->_productFactory->create()->load($child);
+
+			$tmp = $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA). 'catalog/product' . $child_product->getData('image');
+
+            $data[] = $tmp;
+        }
+
+		if( count($data) > 4 )
+			$data = array_slice($data, 0, 4);
+
+        return $data;
     }
 
     /**
