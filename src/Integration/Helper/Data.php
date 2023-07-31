@@ -1283,10 +1283,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             if( in_array("title", $array) )
                 $tmp["title"] = $child_product->getName();
 
-            $data[] = $tmp;
+            $data[] = json_encode($tmp);
         }
 
-        return json_encode($data);
+        return $data;
     }
 
 
