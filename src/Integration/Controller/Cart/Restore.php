@@ -11,6 +11,7 @@ use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Stdlib\CookieManagerInterface;
 
 $objectManager = ObjectManager::getInstance();
 $productMetadata = $objectManager->get('Magento\Framework\App\ProductMetadataInterface');
@@ -24,18 +25,26 @@ if ($v[1] > 2) {
          */
         public $helper;
 
+		/**
+         * @var CookieManagerInterface
+         */
+        public $_cookieManager;
+
         /**
          * Restore constructor.
          *
          * @param Context $context
          * @param Data $helper
+		 * @param CookieManagerInterface $_cookieManager
          */
         public function __construct(
             Context $context,
-            Data    $helper
+            Data    $helper,
+			CookieManagerInterface $_cookieManager
         )
         {
             $this->helper = $helper;
+			$this->_cookieManager = $_cookieManager;
             parent::__construct($context);
         }
 
@@ -56,8 +65,26 @@ if ($v[1] > 2) {
          */
         public function execute()
         {
-            $key = $this->getRequest()->getParam('flashy', 0);
+			$key = $this->getRequest()->getParam('flsid', false);
+
+            if( empty($key) )
+				$key = $this->_cookieManager->getCookie('fls_id');
+
+			if( empty($key) )
+				$key = $this->getRequest()->getParam('flashy', false);
+
+			if( empty($key) )
+				$key = $this->_cookieManager->getCookie('flashy_id');
+
+			if( empty($key) )
+			{
+				$key = $this->getRequest()->getParam('email', false);
+
+				$key = base64_encode(urldecode($key));
+			}
+
             $this->helper->restoreFlashyCartHash($key);
+
             $this->getResponse()->setRedirect('/checkout/cart/index');
         }
     }
@@ -69,18 +96,26 @@ if ($v[1] > 2) {
          */
         public $helper;
 
+		/**
+         * @var CookieManagerInterface
+         */
+        public $_cookieManager;
+
         /**
          * Restore constructor.
          *
          * @param Context $context
          * @param Data $helper
+		 * @param CookieManagerInterface $_cookieManager
          */
         public function __construct(
             Context $context,
-            Data    $helper
+            Data    $helper,
+			CookieManagerInterface $_cookieManager
         )
         {
             $this->helper = $helper;
+			$this->_cookieManager = $_cookieManager;
             parent::__construct($context);
         }
 
@@ -91,8 +126,29 @@ if ($v[1] > 2) {
          */
         public function execute()
         {
-            $key = $this->getRequest()->getParam('flashy', 0);
+            $key = $this->getRequest()->getParam('flsid', false);
+
+            if( empty($key) )
+				$key = $this->_cookieManager->getCookie('fls_id');
+
+            if( empty($key) )
+				$key = $this->_cookieManager->getCookie('flashy_id');
+
+			if( empty($key) )
+				$key = $this->getRequest()->getParam('flashy', false);
+
+			if( empty($key) )
+				$key = $this->_cookieManager->getCookie('flashy_id');
+
+			if( empty($key) )
+			{
+				$key = $this->getRequest()->getParam('email', false);
+
+				$key = base64_encode(urldecode($key));
+			}
+
             $this->helper->restoreFlashyCartHash($key);
+
             $this->getResponse()->setRedirect('/checkout/cart/index');
         }
     }

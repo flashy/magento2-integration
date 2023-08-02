@@ -31,4 +31,9 @@ class Cart extends Template
     {
         return $this->getRequest()->getParam('flashy', 0);
     }
+
+    public function getFlsidKey()
+    {
+        return $this->getRequest()->getParam('flsid', 0);
+    }
 }

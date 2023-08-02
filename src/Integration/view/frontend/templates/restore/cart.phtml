@@ -4,7 +4,8 @@
 </div>
 <form id="flashy_form" class="form" action="<?= $block->getUrl('flashy/cart/restore'); ?>" method="post">
     <?php echo $block->getBlockHtml('formkey')?>
-    <input type="hidden" name="flashy" value="<?= $block->getKey(); ?>">
+    <input type="hidden" name="flashy" value="<?= $block->getKey(); ?>" />
+    <input type="hidden" name="flsid" value="<?= $block->getFlsidKey(); ?>" />
     <input class="restore_button" type="submit" value="Restore">
 </form>
 <script>
