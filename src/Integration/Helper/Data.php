@@ -41,6 +41,8 @@ use Magento\SalesRule\Model\Rule\Condition\Product;
 use Magento\SalesRule\Model\Rule\Condition\Product\Found;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Customer\Api\GroupRepositoryInterface;
+use Magento\Framework\Api\SearchCriteriaBuilder;
 
 class Data extends \Magento\Framework\App\Helper\AbstractHelper
 {
@@ -263,7 +265,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         StockRegistryInterface      $stockRegistry,
         EventManager                $eventManager,
         SubscriberFactory           $subscriberFactory,
-        CustomerRepositoryInterface $customerRepository
+        CustomerRepositoryInterface $customerRepository,
+		GroupRepositoryInterface $groupRepository,
+        SearchCriteriaBuilder $searchCriteriaBuilder
     )
     {
         $objectManager = ObjectManager::getInstance();
@@ -299,6 +303,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->eventManager = $eventManager;
         $this->subscriberFactory = $subscriberFactory;
         $this->customerRepository = $customerRepository;
+		$this->groupRepository = $groupRepository;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         parent::__construct($context);
 
         $this->flashy = null;
@@ -1964,7 +1970,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     ->setFromDate($merged['start'])
                     ->setToDate($merged['expiry_date'])
                     ->setUsesPerCustomer($merged['usage_limit_per_user'])
-                    ->setCustomerGroupIds(array('0','1','2','3',))
+                    ->setCustomerGroupIds($this->getCustomerGroupIds())
                     ->setWebsiteIds([$merged['website']])
                     ->setIsActive($merged['isActive'])
                     ->setSimpleAction($merged['discount_type'])
@@ -2073,6 +2079,22 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 "success" => false
             );
         }
+    }
+
+	public function getCustomerGroupIds()
+    {
+        $searchCriteria = $this->searchCriteriaBuilder->create();
+        $groupRepositoryList = $this->groupRepository->getList($searchCriteria);
+        $groups = $groupRepositoryList->getItems();
+
+        $groupIds = [];
+
+        foreach ($groups as $group)
+		{
+            $groupIds[] = $group->getId();
+        }
+
+        return $groupIds;
     }
 
     /**
