@@ -7,6 +7,7 @@ use Flashy\Helper;
 use Flashy\Integration\Logger\Logger;
 use Flashy\Integration\Model\CarthashFactory;
 use Magento\Catalog\Helper\ImageFactory;
+use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\CatalogInventory\Api\StockRegistryInterface;
@@ -1232,8 +1233,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     'description' => $_product->getShortDescription(),
                     'price' => $_product->getPriceInfo()->getPrice('regular_price')->getValue(),
                     'final_price' => $_product->getPriceInfo()->getPrice('final_price')->getValue(),
-                    'sale_price' => $this->getSpecialPrice($_product),
-                    'sale_price_effective_date' => date('Y-m-d\TH:i:sO', strtotime($_product->getSpecialFromDate())) . '/' . date('Y-m-d\TH:i:sO', strtotime($_product->getSpecialToDate())),
+                    'sale_price' => $_product->getPriceInfo()->getPrice('final_price')->getValue(),
                     'currency' => $currency,
                     'tags' => $_product->getMetaKeyword(),
                     'availability' => $availability
@@ -2199,10 +2199,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if ($product->getTypeId() == Configurable::TYPE_CODE) {
             $allProducts = $product->getTypeInstance(true)->getUsedProducts($product);
             foreach ($allProducts as $simpleProduct) {
-                $productStock = $this->_stockRegistry->getStockItem($simpleProduct->getId());
-                if ($productStock->getIsInStock()) {
-                    $availability = 'in stock';
-                    break;
+                if ($simpleProduct->getStatus() == Status::STATUS_ENABLED) {
+                    $productStock = $this->_stockRegistry->getStockItem($simpleProduct->getId());
+                    if ($productStock->getIsInStock()) {
+                        $availability = 'in stock';
+                        break;
+                    }
                 }
             }
         } else {
@@ -2212,25 +2214,5 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             }
         }
         return $availability;
-    }
-
-    /**
-     * @param $product
-     * @return false
-     */
-    public function getSpecialPrice($product)
-    {
-        $specialPriceInfo = $product->getPriceInfo()->getPrice('special_price');
-        $specialPrice     = $specialPriceInfo->getValue();
-        $today            = time();
-        if ($specialPrice) {
-            $specialFromDate = (string)$specialPriceInfo->getSpecialFromDate();
-            $specialToDate   = (string)$specialPriceInfo->getSpecialToDate();
-            if ($today >= strtotime($specialFromDate) && $today <= strtotime($specialToDate) ||
-                $today >= strtotime($specialFromDate) && $specialToDate == "") {
-                return $specialPrice;
-            }
-        }
-        return false;
     }
 }
