@@ -2,7 +2,7 @@
     "name": "flashy/magento2-integration",
     "description": "Flashy's module for Magento 2+ adds tracking events View Content, Cart Updates, Purchases, Page Views and more and make sure everything is in sync with the Flashy platform.",
     "type": "magento2-module",
-    "version": "2.5.0",
+    "version": "2.5.1",
     "authors": [
         {
             "email": "hello@flashyapp.com",
@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "php": "~7.1",
+        "php": "^7.1||^8.1",
         "flashy/flashy-php": "*"
     },
     "minimum-stability": "dev",
