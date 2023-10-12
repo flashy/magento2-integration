@@ -16,6 +16,7 @@ composer require flashy/magento2-integration
 ### Step 2 -  Enable the module
 ```
 bin/magento module:enable --clear-static-content Flashy_Integration
+bin/magento setup:di:compile
 bin/magento setup:upgrade
 bin/magento cache:flush
 ```
