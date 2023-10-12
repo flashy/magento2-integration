@@ -712,9 +712,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $data['context']['shipping']['method'] = $order->getShippingDescription();
             }
 
+			$data['website_name'] = $order->getStore()->getName();
 
             $this->addLog('Data=' . json_encode($data));
-            #
+          
             $track = Helper::tryOrLog(function () use ($data) {
                 return $this->flashy->events->track("Purchase", $data);
             });
@@ -1692,6 +1693,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     "php" => phpversion(),
                     "memory_limit" => ini_get('memory_limit'),
                 ),
+				"website_id" => $scope_id,
             )
         );
         $urls = array("contacts", "products", "orders");
@@ -1875,7 +1877,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'email' => $order->getCustomerEmail(),
                 'content_ids' => $productIds,
                 'value' => $total,
-                'currency' => $order->getOrderCurrencyCode()
+                'currency' => $order->getOrderCurrencyCode(),
+				'website_name' => $order->getStore()->getName(),
             ];
             $this->addLog('Data=' . json_encode($data));
             $track = Helper::tryOrLog(function () use ($data) {

@@ -11,7 +11,8 @@
     ],
     "require": {
         "php": "^7.1||^8.1",
-        "flashy/flashy-php": "*"
+        "flashy/flashy-php": "*",
+        "ext-json": "*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
