@@ -7,11 +7,13 @@ use Flashy\Helper;
 use Flashy\Integration\Logger\Logger;
 use Flashy\Integration\Model\CarthashFactory;
 use Magento\Catalog\Helper\ImageFactory;
+use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\Checkout\Model\Cart;
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Customer\Model\ResourceModel\Customer\CollectionFactory as CustomerCollectionFactory;
 use Magento\Customer\Model\Session as CustomerSession;
@@ -62,7 +64,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     const FLASHY_LIST_STRING_PATH = 'flashy/flashy_lists/flashy_list';
 
-	const FLASHY_ENVIRONMET = 'flashy/flashy/env';
+    const FLASHY_ENVIRONMET = 'flashy/flashy/env';
 
     /**
      * @var CookieManagerInterface
@@ -440,14 +442,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $store = $this->_request->getParam("store", false);
 
-		if( empty($store) )
-		{
+        if( empty($store) )
+        {
             $store = $this->_request->getParam("store_id", false);
         }
 
-		if( empty($store) )
-		{
-			$currentStore = $this->_storeManager->getStore();
+        if( empty($store) )
+        {
+            $currentStore = $this->_storeManager->getStore();
 
             $store = $currentStore->getId();
         }
@@ -597,28 +599,28 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
             $this->addLog('Getting order items');
 
-			$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 
-			$productData = [];
+            $productData = [];
 
             $products = [];
 
             foreach ($items as $i):
                 $products[] = $i->getProductId();
 
-				if ($i->getData()) {
+                if ($i->getData()) {
 
-					$product = $this->_productFactory->create()->load($i->getProductId());
+                    $product = $this->_productFactory->create()->load($i->getProductId());
 
-					$store = $this->_storeManager->getStore();
+                    $store = $this->_storeManager->getStore();
 
-					$productData[] = [
-						"image_link" => $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA). 'catalog/product' . $product->getImage(),
-						"title" => $i->getName(),
-						"quantity" => $i->getQtyOrdered(),
-						"total" => $i->getPrice(),
-					];
-				}
+                    $productData[] = [
+                        "image_link" => $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA). 'catalog/product' . $product->getImage(),
+                        "title" => $i->getName(),
+                        "quantity" => $i->getQtyOrdered(),
+                        "total" => $i->getPrice(),
+                    ];
+                }
             endforeach;
 
             $this->addLog('Getting product ids');
@@ -636,45 +638,45 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 "currency" => $currency
             );
 
-			$data['context']['items'] = $productData;
+            $data['context']['items'] = $productData;
 
-			$data['context']['total'] = $total;
+            $data['context']['total'] = $total;
 
-			$data['context']['order_id'] = $order->getIncrementId();
+            $data['context']['order_id'] = $order->getIncrementId();
 
             if( !empty($order->getCouponCode()) )
             {
                 $data['context']['coupon_code'] = $order->getCouponCode();
             }
 
-			$billingData = $order->getBillingAddress()->getData();
+            $billingData = $order->getBillingAddress()->getData();
 
-			if( !empty($billingData['street']) )
-			{
-				$data['context']['billing']['address'] = $billingData['street'];
-			}
+            if( !empty($billingData['street']) )
+            {
+                $data['context']['billing']['address'] = $billingData['street'];
+            }
 
-			if( !empty($billingData['city']) )
-			{
-				$data['context']['billing']['city'] = $billingData['city'];
-			}
+            if( !empty($billingData['city']) )
+            {
+                $data['context']['billing']['city'] = $billingData['city'];
+            }
 
-			if( !empty($billingData['postcode']) )
-			{
-				$data['context']['billing']['postcode'] = $billingData['postcode'];
-			}
+            if( !empty($billingData['postcode']) )
+            {
+                $data['context']['billing']['postcode'] = $billingData['postcode'];
+            }
 
-			if( !empty($billingData['country_id']) )
-			{
-				$country = $objectManager->create('\Magento\Directory\Model\Country')->load($billingData['country_id'])->getName();
+            if( !empty($billingData['country_id']) )
+            {
+                $country = $objectManager->create('\Magento\Directory\Model\Country')->load($billingData['country_id'])->getName();
 
-				$data['context']['billing']['country'] = $country;
-			}
+                $data['context']['billing']['country'] = $country;
+            }
 
-			if( !empty($billingData['region']) )
-			{
-				$data['context']['billing']['state'] = $billingData['region'];
-			}
+            if( !empty($billingData['region']) )
+            {
+                $data['context']['billing']['state'] = $billingData['region'];
+            }
 
             // shipping address section
             if (!$order->getIsVirtual()) {
@@ -713,7 +715,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 			$data['website_name'] = $order->getStore()->getName();
 
             $this->addLog('Data=' . json_encode($data));
-
+          
             $track = Helper::tryOrLog(function () use ($data) {
                 return $this->flashy->events->track("Purchase", $data);
             });
@@ -796,18 +798,18 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-    * Get product category name.
-    *
-    * @return string
-    */
-   public function getProductCategoryName($prdId)
-   {
+     * Get product category name.
+     *
+     * @return string
+     */
+    public function getProductCategoryName($prdId)
+    {
 
-	$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 
         $product = $objectManager->create('Magento\Catalog\Model\Product')->load($prdId);
 
-	    $cats = $product->getCategoryIds();
+        $cats = $product->getCategoryIds();
 
         $catsName = "";
 
@@ -815,17 +817,17 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         {
             $category = $objectManager->create('Magento\Catalog\Model\Category')->load($cat);
 
-	        $parentCatName = $objectManager->create('Magento\Catalog\Model\Category')->load($category->getparent_id());
+            $parentCatName = $objectManager->create('Magento\Catalog\Model\Category')->load($category->getparent_id());
 
             $catsName .= "category:" . ($parentCatName->getName()) . ">" .$category->getName();
 
-	    if($counter < (count($cats) - 1) )
-               $catsName .= ", ";
+            if($counter < (count($cats) - 1) )
+                $catsName .= ", ";
         }
 
-	return $catsName;
+        return $catsName;
 
-   }
+    }
 
     /**
      * Get cart data.
@@ -1050,11 +1052,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      *get the category name
      */
-	public function getCategoryName()
+    public function getCategoryName()
     {
         if( $this->isCategoryPage() )
-		{
-			$category = $this->_registry->registry('current_category');
+        {
+            $category = $this->_registry->registry('current_category');
 
             return $category->getName();
         }
@@ -1075,43 +1077,43 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
             if (!empty($list_id) && isset($this->flashy))
             {
-				$subscriber = [];
+                $subscriber = [];
 
-				if( isset( $subscriberData['email'] ) )
+                if( isset( $subscriberData['email'] ) )
                 {
-					$subscriber['email'] = $subscriberData['email'];
- 				}
+                    $subscriber['email'] = $subscriberData['email'];
+                }
 
                 if( isset( $subscriberData['telephone'] ) )
                 {
-					$subscriber['phone'] = $subscriberData['telephone'];
- 				}
+                    $subscriber['phone'] = $subscriberData['telephone'];
+                }
 
-				if( isset( $subscriberData['firstname'] ) )
+                if( isset( $subscriberData['firstname'] ) )
                 {
-					$subscriber['first_name'] = $subscriberData['firstname'];
- 				}
+                    $subscriber['first_name'] = $subscriberData['firstname'];
+                }
 
-				if( isset( $subscriberData['lastname'] ) )
+                if( isset( $subscriberData['lastname'] ) )
                 {
-					$subscriber['last_name'] = $subscriberData['lastname'];
- 				}
+                    $subscriber['last_name'] = $subscriberData['lastname'];
+                }
 
-				if( isset( $subscriberData['dob'] ) )
+                if( isset( $subscriberData['dob'] ) )
                 {
-					$subscriber['birthday'] = $subscriberData['dob'];
- 				}
+                    $subscriber['birthday'] = $subscriberData['dob'];
+                }
 
-				if( isset( $subscriberData['city'] ) )
+                if( isset( $subscriberData['city'] ) )
                 {
-					$subscriber['city'] = $subscriberData['city'];
- 				}
+                    $subscriber['city'] = $subscriberData['city'];
+                }
 
-				if( isset( $subscriberData['street'] ) )
+                if( isset( $subscriberData['street'] ) )
                 {
-					$street = is_array($subscriberData['street']) ? implode(', ', $subscriberData['street']) : $subscriberData['street'];
-					$subscriber['address'] = $street;
- 				}
+                    $street = is_array($subscriberData['street']) ? implode(', ', $subscriberData['street']) : $subscriberData['street'];
+                    $subscriber['address'] = $street;
+                }
 
                 if ($list_id != '') {
                     $subscribe = Helper::tryOrLog(function () use ($subscriber, $list_id) {
@@ -1211,7 +1213,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $products->addAttributeToFilter('status', \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED);
         $products->addStoreFilter($store_id);
 
-		if ($limit) {
+        if ($limit) {
             $products->setPageSize((int)$limit);
             if ($page) {
                 $products->setCurPage((int)$page);
@@ -1229,24 +1231,22 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         foreach ($products as $_product) {
             try {
                 $product_id = $_product->getId();
-                $productStock = $this->_stockRegistry->getStockItem($product_id);
-                $availability = $productStock->getIsInStock() ? 'in stock' : 'out of stock';
+                $availability = $this->getStockStatus($_product);
 
                 $export_products[$i] = array(
                     'id' => $product_id,
                     'link' => $_product->getProductUrl($_product),
                     'title' => $_product->getName(),
                     'description' => $_product->getShortDescription(),
-                    'price' => $_product->getPrice(),
-                    'final_price' => $_product->getFinalPrice(),
-                    'sale_price' => $_product->getSpecialPrice(),
-                    'sale_price_effective_date' => date('Y-m-d\TH:i:sO', strtotime($_product->getSpecialFromDate())) . '/' . date('Y-m-d\TH:i:sO', strtotime($_product->getSpecialToDate())),
+                    'price' => $_product->getPriceInfo()->getPrice('regular_price')->getValue(),
+                    'final_price' => $_product->getPriceInfo()->getPrice('final_price')->getValue(),
+                    'sale_price' => $_product->getPriceInfo()->getPrice('final_price')->getValue(),
                     'currency' => $currency,
                     'tags' => $_product->getMetaKeyword(),
                     'availability' => $availability
                 );
                 if ($_product->getImage() && $_product->getImage() != 'no_selection') {
-					$store = $this->_storeManager->getStore();
+                    $store = $this->_storeManager->getStore();
 
                     $export_products[$i]['image_link'] = $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA). 'catalog/product' . $_product->getImage();
                 }
@@ -1261,17 +1261,17 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
                 $export_products[$i]['product_type'] = substr($export_products[$i]['product_type'], 0, -1);
 
-				$_objectManager = ObjectManager::getInstance();
+                $_objectManager = ObjectManager::getInstance();
 
-				$is_parent = $_objectManager->get('Magento\ConfigurableProduct\Model\Product\Type\Configurable')->getParentIdsByChild($product_id);
+                $is_parent = $_objectManager->get('Magento\ConfigurableProduct\Model\Product\Type\Configurable')->getParentIdsByChild($product_id);
 
-				$export_products[$i]['variant'] = (empty($is_parent[0]) ? 0 : 1);
+                $export_products[$i]['variant'] = (empty($is_parent[0]) ? 0 : 1);
 
-				$export_products[$i]['parent_id'] = (empty($is_parent[0]) ? 0 : $is_parent[0]);
+                $export_products[$i]['parent_id'] = (empty($is_parent[0]) ? 0 : $is_parent[0]);
 
                 $export_products[$i]['sku'] = $_product->getSku();
 
-				$export_products[$i]['created_at'] = date("Y-m-d", strtotime($_product->getCreatedAt()));
+                $export_products[$i]['created_at'] = date("Y-m-d", strtotime($_product->getCreatedAt()));
 
                 $export_products[$i]['updated_at'] = date("Y-m-d", strtotime($_product->getUpdatedAt()));
 
@@ -1987,83 +1987,83 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     ->setCouponCode($merged['coupon_code'])
                     ->setStopRulesProcessing($merged['stop_rules']);
 
-                        if( $args['minimum_amount'] > 0 )
-                        {
-                            $actions = $this->_objectManager->create('Magento\SalesRule\Model\Rule\Condition\Combine')
-                                ->setType('Magento\SalesRule\Model\Rule\Condition\Address')
-                                ->setAttribute('base_subtotal_with_discount')
-                                ->setOperator('>')
-                                ->setValue($args['minimum_amount']);
+                if( $args['minimum_amount'] > 0 )
+                {
+                    $actions = $this->_objectManager->create('Magento\SalesRule\Model\Rule\Condition\Combine')
+                        ->setType('Magento\SalesRule\Model\Rule\Condition\Address')
+                        ->setAttribute('base_subtotal_with_discount')
+                        ->setOperator('>')
+                        ->setValue($args['minimum_amount']);
 
-                            $shoppingCartPriceRule->getActions()->addCondition($actions);
-                        }
+                    $shoppingCartPriceRule->getActions()->addCondition($actions);
+                }
 
-                    if( $args['free_shipping'] )
-                    {
-                        $shoppingCartPriceRule->setSimpleFreeShipping(1);
-                    }
+                if( $args['free_shipping'] )
+                {
+                    $shoppingCartPriceRule->setSimpleFreeShipping(1);
+                }
 
-                    if( isset($args['allow_categories']) )
-                    {
-                        $shoppingCartPriceRule->getConditions()->loadArray(
-                            [
-                                'type' => Combine::class,
-                                'attribute' => null,
-                                'operator' => null,
-                                'value' => '1',
-                                'is_value_processed' => null,
-                                'aggregator' => 'all',
-                                'conditions' => [
-                                        [
-                                            'type' => Found::class,
-                                            'attribute' => null,
-                                            'operator' => null,
-                                            'value' => 1,
-                                            'is_value_processed' => null,
-                                        ],
-                                        [
-                                            'type' => Product::class,
-                                            'attribute' => 'category_ids',
-                                            'operator' => '()',
-                                            'value' => $args['allow_categories'],
-                                            'is_value_processed' => false,
-                                            'attribute_scope' => ''
-                                        ]
+                if( isset($args['allow_categories']) )
+                {
+                    $shoppingCartPriceRule->getConditions()->loadArray(
+                        [
+                            'type' => Combine::class,
+                            'attribute' => null,
+                            'operator' => null,
+                            'value' => '1',
+                            'is_value_processed' => null,
+                            'aggregator' => 'all',
+                            'conditions' => [
+                                [
+                                    'type' => Found::class,
+                                    'attribute' => null,
+                                    'operator' => null,
+                                    'value' => 1,
+                                    'is_value_processed' => null,
                                 ],
-                            ]
-                        );
-                    }
+                                [
+                                    'type' => Product::class,
+                                    'attribute' => 'category_ids',
+                                    'operator' => '()',
+                                    'value' => $args['allow_categories'],
+                                    'is_value_processed' => false,
+                                    'attribute_scope' => ''
+                                ]
+                            ],
+                        ]
+                    );
+                }
 
-                    if( isset($args['exclude_categories']) )
-                    {
-                        $shoppingCartPriceRule->getConditions()->loadArray(
-                            [
-                                'type' => Combine::class,
-                                'attribute' => null,
-                                'operator' => null,
-                                'value' => '1',
-                                'is_value_processed' => null,
-                                'aggregator' => 'all',
-                                'conditions' => [
-                                        [
-                                            'type' => Found::class,
-                                            'attribute' => null,
-                                            'operator' => null,
-                                            'value' => 1,
-                                            'is_value_processed' => null,
-                                        ],
-                                        [
-                                            'type' => Product::class,
-                                            'attribute' => 'category_ids',
-                                            'operator' => '!()',
-                                            'value' => $args['exclude_categories'],
-                                            'is_value_processed' => false,
-                                            'attribute_scope' => ''
-                                        ]
+                if( isset($args['exclude_categories']) )
+                {
+                    $shoppingCartPriceRule->getConditions()->loadArray(
+                        [
+                            'type' => Combine::class,
+                            'attribute' => null,
+                            'operator' => null,
+                            'value' => '1',
+                            'is_value_processed' => null,
+                            'aggregator' => 'all',
+                            'conditions' => [
+                                [
+                                    'type' => Found::class,
+                                    'attribute' => null,
+                                    'operator' => null,
+                                    'value' => 1,
+                                    'is_value_processed' => null,
                                 ],
-                            ]
-                        );
-                    }
+                                [
+                                    'type' => Product::class,
+                                    'attribute' => 'category_ids',
+                                    'operator' => '!()',
+                                    'value' => $args['exclude_categories'],
+                                    'is_value_processed' => false,
+                                    'attribute_scope' => ''
+                                ]
+                            ],
+                        ]
+                    );
+                }
 
                 $shoppingCartPriceRule->save();
 
@@ -2212,5 +2212,32 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         return true;
+    }
+
+    /**
+     * @param $product
+     * @return string
+     */
+    protected function getStockStatus($product)
+    {
+        $availability = 'out of stock';
+        if ($product->getTypeId() == Configurable::TYPE_CODE) {
+            $allProducts = $product->getTypeInstance(true)->getUsedProducts($product);
+            foreach ($allProducts as $simpleProduct) {
+                if ($simpleProduct->getStatus() == Status::STATUS_ENABLED) {
+                    $productStock = $this->_stockRegistry->getStockItem($simpleProduct->getId());
+                    if ($productStock->getIsInStock()) {
+                        $availability = 'in stock';
+                        break;
+                    }
+                }
+            }
+        } else {
+            $productStock = $this->_stockRegistry->getStockItem($product->getId());
+            if ($productStock->getIsInStock()) {
+                $availability = 'in stock';
+            }
+        }
+        return $availability;
     }
 }
