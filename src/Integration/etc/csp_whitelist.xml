@@ -5,24 +5,28 @@
             <values>
                 <value id="flashyapp" type="host">*.flashyapp.com</value>
                 <value id="flashy_gateway" type="host">api.flashy.app</value>
+                <value id="flashy_dev_js" type="host">*.flashy.dev</value>
             </values>
         </policy>
         <policy id="connect-src">
             <values>
                 <value id="flashyapp" type="host">*.flashyapp.com</value>
                 <value id="flashy_gateway" type="host">api.flashy.app</value>
+                <value id="flashy_dev_gateway" type="host">*.flashy.dev</value>
             </values>
         </policy>
         <policy id="frame-src">
             <values>
                 <value id="flashyapp" type="host">*.flashyapp.com</value>
                 <value id="flashy_gateway" type="host">api.flashy.app</value>
+                <value id="flashy_dev_gateway" type="host">*.flashy.dev</value>
             </values>
         </policy>
         <policy id="form-action">
             <values>
                 <value id="flashyapp" type="host">*.flashyapp.com</value>
                 <value id="flashy_gateway" type="host">api.flashy.app</value>
+                <value id="flashy_dev_gateway" type="host">*.flashy.dev</value>
             </values>
         </policy>
     </policies>

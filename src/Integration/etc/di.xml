@@ -14,5 +14,12 @@
 			</argument>
 		</arguments>
 	</type>
+	<type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="set_flashy_environment" xsi:type="object">Flashy\Integration\Console\Command\SetEnvironmentCommand</item>
+            </argument>
+        </arguments>
+    </type>
 </config>
 

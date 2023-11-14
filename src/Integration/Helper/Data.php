@@ -615,7 +615,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $store = $this->_storeManager->getStore();
 
                     $productData[] = [
-                        "image_link" => $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA). 'catalog/product' . $product->getImage(),
+                        "image_link" => $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA). 'catalog/product/' . $product->getImage(),
                         "title" => $i->getName(),
                         "quantity" => $i->getQtyOrdered(),
                         "total" => $i->getPrice(),
@@ -869,11 +869,26 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function setFlashyApi($flashy_key)
     {
+		$environment = $this->_scopeConfig->getValue(
+			'flashy/general/environment',
+			\Magento\Store\Model\ScopeInterface::SCOPE_STORE
+		);
+
         try {
-            return new Flashy(array(
+
+            $flashy = new Flashy(array(
                 'api_key' => $flashy_key,
                 'log_path' => $this->_directorylist->getPath('var') . '/log/flashy.log'
             ));
+
+			if( $environment === "dev" )
+			{
+                $flashy->client->setBasePath('https://api.flashy.dev/');
+                $flashy->client->setDebug(true);
+            }
+
+			return $flashy;
+
         } catch (\Exception $e) {
             $this->addLog($e->getMessage());
             return false;
@@ -1213,6 +1228,20 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $products->addAttributeToFilter('status', \Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED);
         $products->addStoreFilter($store_id);
 
+		$filters = $this->_request->getParam('filters', null);
+		$options = $this->_request->getParam('options', null);
+
+		if( $filters )
+		{
+			$filters = json_decode(base64_decode($filters), true);
+
+			foreach($filters as $filter)
+			{
+				if( isset($filter['key']) && isset($filter['value']) )
+					$products->addAttributeToFilter($filter['key'], $filter['value']);
+			}
+		}
+
         if ($limit) {
             $products->setPageSize((int)$limit);
             if ($page) {
@@ -1248,7 +1277,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 if ($_product->getImage() && $_product->getImage() != 'no_selection') {
                     $store = $this->_storeManager->getStore();
 
-                    $export_products[$i]['image_link'] = $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA). 'catalog/product' . $_product->getImage();
+                    $export_products[$i]['image_link'] = $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA). 'catalog/product/' . $_product->getImage();
                 }
 
                 $categoryCollection = $_product->getCategoryCollection()->addAttributeToSelect('name');
@@ -1271,9 +1300,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
                 $export_products[$i]['sku'] = $_product->getSku();
 
-                $export_products[$i]['created_at'] = date("Y-m-d", strtotime($_product->getCreatedAt()));
+                $export_products[$i]['created_at'] = strtotime($_product->getCreatedAt());
 
-                $export_products[$i]['updated_at'] = date("Y-m-d", strtotime($_product->getUpdatedAt()));
+                $export_products[$i]['updated_at'] = strtotime($_product->getUpdatedAt());
 
                 $i++;
             } catch (\Exception $e) {
@@ -1937,8 +1966,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 'start' => date('Y-m-d'),   //Date
                 'isActive' => 1,
                 'includeShipping' => true,
-                'stop_rules' => false,
-                'website' => '1',
+                'stop_rules' => false
             );
 
             $merged = array_merge($default, $args);
@@ -1974,11 +2002,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     ->setToDate($merged['expiry_date'])
                     ->setUsesPerCustomer($merged['usage_limit_per_user'])
                     ->setCustomerGroupIds($this->getCustomerGroupIds())
-                    ->setWebsiteIds([$merged['website']])
                     ->setIsActive($merged['isActive'])
                     ->setSimpleAction($merged['discount_type'])
                     ->setDiscountAmount($merged['amount'])
-                    ->setDiscountQty(1)
+                    ->setDiscountQty(null)
+                    ->setDiscountStep(0)
                     ->setApplyToShipping(0)
                     ->setUsesPerCoupon($merged['usage_limit'])
                     ->setProductIds($merged['product_ids'])
@@ -1986,6 +2014,16 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     ->setIsRss(0)
                     ->setCouponCode($merged['coupon_code'])
                     ->setStopRulesProcessing($merged['stop_rules']);
+
+                if( isset($merged['website']) && $merged['website'] )
+                {
+
+                    $shoppingCartPriceRule->setWebsiteIds([$merged['website']]);
+                }
+                else
+                {
+                    $shoppingCartPriceRule->setWebsiteIds($this->getAllWebsiteIds());
+                }
 
                 if( $args['minimum_amount'] > 0 )
                 {
@@ -2082,6 +2120,18 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 "success" => false
             );
         }
+    }
+
+
+    public function getAllWebsiteIds() {
+        $websiteIds = [];
+        $websites = $this->_storeManager->getWebsites();
+
+        foreach ($websites as $website) {
+            $websiteIds[] = $website->getId();
+        }
+
+        return $websiteIds;
     }
 
 	public function getCustomerGroupIds()

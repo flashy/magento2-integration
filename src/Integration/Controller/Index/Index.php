@@ -57,7 +57,7 @@ class Index extends Action
         $store_id = $this->getRequest()->getParam('store_id', 0);
         $export_type = $this->getRequest()->getParam('export', 'products');
 
-        if ($this->helper->getFlashyKey(ScopeInterface::SCOPE_STORE, $store_id) === $flashy_key) {
+        if ( trim($this->helper->getFlashyKey()) === $flashy_key ) {
             $limit = $this->getRequest()->getParam('limit');
             $page = $this->getRequest()->getParam('page');
             $total = 0;

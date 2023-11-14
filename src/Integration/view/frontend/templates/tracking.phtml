@@ -6,8 +6,11 @@
 <?php if( $block->getFlashyId() ) : ?>
 	<script type="text/javascript">
 		//<![CDATA[
-			'use strict'; (function (a, b, c) { if (!a.flashy) { a.flashy = function () { a.flashy.event && a.flashy.event(arguments), a.flashy.queue.push(arguments) }, a.flashy.queue = []; var d = document.getElementsByTagName('script')[0], e = document.createElement(b); e.src = c, e.async = !0, d.parentNode.insertBefore(e, d) } })(window, 'script', 'https://js.flashyapp.com/thunder.js'), flashy('init', <?php echo $block->getFlashyId(); ?>);
+			'use strict'; (function (a, b, c) { if (!a.flashy) { a.flashy = function () { a.flashy.event && a.flashy.event(arguments), a.flashy.queue.push(arguments) }, a.flashy.queue = []; var d = document.getElementsByTagName('script')[0], e = document.createElement(b); e.src = c, e.async = !0, d.parentNode.insertBefore(e, d) } })(window, 'script', '<?php echo $block->getFlashyJs(); ?>'), flashy('init', <?php echo $block->getFlashyId(); ?>);
 			flashy('PageView');
+
+            <?php echo $block->getFlashyVersion(); ?>
+
 			<?php
 				$flashy_id = $block->getFlashyIdCookie();
 				if( $block->customerIsLoggedIn() && !$flashy_id ) {
