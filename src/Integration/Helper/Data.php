@@ -317,6 +317,31 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
     }
 
+	public function getFlashyVersion()
+	{
+		return 'window.flashyMetadata = {"platform": "Magento","version": "2.5.2"}; console.log("Flashy Init", flashyMetadata);';
+	}
+
+    public function getFlashyJs()
+    {
+        if( class_exists(\Magento\Framework\App\ObjectManager::class) )
+        {
+            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+
+            $scopeConfig = $objectManager->get('Magento\Framework\App\Config\ScopeConfigInterface');
+
+            $environment = $scopeConfig->getValue(
+                'flashy/general/environment',
+                \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            );
+
+            if( $environment === "dev" )
+                return "https://js.flashy.dev/thunder.js";
+        }
+
+        return "https://js.flashyapp.com/thunder.js";
+    }
+
     /**
      * Get base url.
      *

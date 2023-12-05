@@ -50,6 +50,16 @@ class Product extends Template
         return $this->helper->getProductDetails();
     }
 
+    public function getFlashyVersion()
+    {
+        return $this->helper->getFlashyVersion();
+    }
+
+    public function getFlashyJs()
+    {
+        return $this->helper->getFlashyJs();
+    }
+
     /**
      * Get cart data.
      *
