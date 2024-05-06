@@ -1267,6 +1267,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 			}
 		}
 
+        if( $options )
+        {
+            $options = json_decode(base64_decode($options), true);
+        }
+
         if ($limit) {
             $products->setPageSize((int)$limit);
             if ($page) {
@@ -1287,9 +1292,16 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $product_id = $_product->getId();
                 $availability = $this->getStockStatus($_product);
 
+                $link = $_product->getProductUrl($_product);
+
+                if( isset($options['link_replace']) )
+                {
+                    $link = str_replace($options['link_replace']['search'], $options['link_replace']['replace'], $link);
+                }
+
                 $export_products[$i] = array(
                     'id' => $product_id,
-                    'link' => $_product->getProductUrl($_product),
+                    'link' => $link,
                     'title' => $_product->getName(),
                     'description' => $_product->getShortDescription(),
                     'price' => $_product->getPriceInfo()->getPrice('regular_price')->getValue(),
@@ -1303,6 +1315,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $store = $this->_storeManager->getStore();
 
                     $export_products[$i]['image_link'] = $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA). 'catalog/product/' . $_product->getImage();
+
+                    if( isset($options['link_replace']) )
+                    {
+                        $export_products[$i]['image_link'] = str_replace($options['link_replace']['search'], $options['link_replace']['replace'], $export_products[$i]['image_link']);
+                    }
                 }
 
                 $categoryCollection = $_product->getCategoryCollection()->addAttributeToSelect('name');
@@ -1344,14 +1361,27 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $next_url = null;
 
         if ($limit) {
-            if (ceil($size / $page_size) > $current_page) {
+            if (ceil($size / $page_size) > $current_page)
+            {
                 $base_url = $this->getBaseUrlByScopeId($store_id);
+
+                if( isset($options['base_replace']) )
+                {
+                    $base_url = str_replace($options['base_replace']['search'], $options['base_replace']['replace'], $base_url);
+                }
+
                 $nextpage = $current_page + 1;
+
                 $next_url = $base_url . "flashy?export=products&store_id=$store_id&limit=$limit&page=$nextpage&flashy_key=$this->apiKey";
             }
             if ($size > $limit) {
                 $flashy_pagination = true;
             }
+        }
+
+        if( $next_url && $this->_request->getParam('options', null) )
+        {
+            $next_url = $next_url . "&options=" . $this->_request->getParam('options', null); 
         }
 
         return array(
