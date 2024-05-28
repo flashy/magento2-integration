@@ -211,6 +211,16 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     private $subscriberFactory;
 
+    /** 
+     * @var GroupRepositoryInterface
+     */
+    protected $groupRepository;
+
+    /**
+     * @var SearchCriteriaBuilder
+     */
+    protected $searchCriteriaBuilder;
+
     /**
      * Data constructor.
      *
