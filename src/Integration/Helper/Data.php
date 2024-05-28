@@ -319,7 +319,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
 	public function getFlashyVersion()
 	{
-		return 'window.flashyMetadata = {"platform": "Magento","version": "2.5.4"}; console.log("Flashy Init", flashyMetadata);';
+		return 'window.flashyMetadata = {"platform": "Magento","version": "2.5.5"}; console.log("Flashy Init", flashyMetadata);';
 	}
 
     public function getFlashyJs()
